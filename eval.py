@@ -76,6 +76,12 @@ loss, split_predictions, lang_stats = eval_utils.eval_split(model, crit, loader,
     vars(opt))
 
 print('loss: ', loss)
+model_id = infos['opt'].id
+xe = "_xe"
+if "rl" in model_id:
+  xe = ""
+print(model_id+xe+"_model_"+str(infos['iter']))
+print("beam_size "+str(opt.beam_size))
 if lang_stats:
   print(lang_stats)
 

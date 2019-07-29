@@ -228,7 +228,7 @@ def add_eval_options(parser):
     # misc
     parser.add_argument('--id', type=str, default='', 
                     help='an id identifying this run/job. used only if language_eval = 1 for appending to intermediate files')
-    parser.add_argument('--verbose_beam', type=int, default=1, 
+    parser.add_argument('--verbose_beam', type=int, default=0, 
                     help='if we need to print out all beam search beams.')
     parser.add_argument('--verbose_loss', type=int, default=0, 
                     help='If calculate loss using ground truth during evaluation')

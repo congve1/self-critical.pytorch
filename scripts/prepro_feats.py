@@ -50,10 +50,11 @@ from misc.resnet_utils import myResnet
 import misc.resnet as resnet
 
 def main(params):
+  device = torch.device("cuda:"+str(params['gpu']))
   net = getattr(resnet, params['model'])()
   net.load_state_dict(torch.load(os.path.join(params['model_root'],params['model']+'.pth')))
   my_resnet = myResnet(net)
-  my_resnet.cuda()
+  my_resnet.to(device)
   my_resnet.eval()
 
   imgs = json.load(open(params['input_json'], 'r'))
@@ -78,7 +79,7 @@ def main(params):
       I = np.concatenate((I,I,I), axis=2)
 
     I = I.astype('float32')/255.0
-    I = torch.from_numpy(I.transpose([2,0,1])).cuda()
+    I = torch.from_numpy(I.transpose([2,0,1])).to(device)
     I = preprocess(I)
     with torch.no_grad():
       tmp_fc, tmp_att = my_resnet(I, params['att_size'])
@@ -103,6 +104,7 @@ if __name__ == "__main__":
   parser.add_argument('--att_size', default=14, type=int, help='14x14 or 7x7')
   parser.add_argument('--model', default='resnet101', type=str, help='resnet101, resnet152')
   parser.add_argument('--model_root', default='./data/imagenet_weights', type=str, help='model root')
+  parser.add_argument("--gpu", default=0, type=int, help="select gpu")
 
   args = parser.parse_args()
   params = vars(args) # convert to ordinary dict
