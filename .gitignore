@@ -1,0 +1,9 @@
+*.pyc
+data/
+log_*
+vis/
+__init__.py
+eval_results/
+setup.py
+.idea
+
