@@ -58,7 +58,7 @@ for infile in infiles:
                 # print(item['image_id'])
                 #pdb.set_trace()
             for field in ['boxes', 'features']:
-                item[field] = np.frombuffer(base64.decodestring(item[field]), 
+                item[field] = np.frombuffer(decode_base64(item[field]), 
                         dtype=np.float32).reshape((item['num_boxes'],-1))
             np.savez_compressed(os.path.join(args.output_dir+'_att', str(item['image_id'])), feat=item['features'])
             np.save(os.path.join(args.output_dir+'_fc', str(item['image_id'])), item['features'].mean(0))
