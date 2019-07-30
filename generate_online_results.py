@@ -60,39 +60,32 @@ crit = utils.LanguageModelCriterion()
 
 # Create the Data Loader instance
 val_opt = copy.deepcopy(opt)
-val_opt.input_fc_dir = "data/cocobu_fc_test"
-val_opt.input_att_dir = "data/cocobu_att_test"
-val_opt.input_json = "data/cococaptions_val.json"
-val_opt.input_label_h5 = ""
-val_opt.split = "online"
+val_opt.input_fc_dir = "data/cocobu_fc"
+val_opt.input_att_dir = "data/cocobu_att"
+val_opt.input_json = "data/captions_val2014.json"
+val_opt.input_label_h5 = 'none'
+val_opt.split = "val"
 val_dataloader = DataLoader(val_opt)
 
 test_opt = copy.deepcopy(opt)
-test_opt.input_fc_dir = "data/cocobu_fc_test"
-test_opt.input_att_dir = "data/cocobu_att_test"
-test_opt.input_json = "data/cococaptions_test.json"
-test_opt.input_label_h5 = ""
-test_opt.split = "online"
+test_opt.input_fc_dir = "data/cocobu_fc"
+test_opt.input_att_dir = "data/cocobu_att"
+test_opt.input_json = "data/captions_test2014.json"
+test_opt.input_label_h5 = 'none'
+test_opt.split = "test"
 
 test_dataloader = DataLoader(test_opt)
-if len(opt.image_folder) == 0:
-  loader = DataLoader(opt)
-else:
-  loader = DataLoaderRaw({'folder_path': opt.image_folder,
-                            'coco_json': opt.coco_json,
-                            'batch_size': opt.batch_size,
-                            'cnn_model': opt.cnn_model})
 # When eval using provided pretrained model, the vocab may be different from what you have in your cocotalk.json
 # So make sure to use the vocab in infos file.
-loader.ix_to_word = infos['vocab']
 
 
 # Set sample options
-opt.datset = opt.input_json
-for loader, opt, name in zip([val_dataloader,test_dataloader], [val_opt, test_opt], ['val2014', 'test2014']):
+for loader, opt, name in zip([val_dataloader, test_dataloader], [val_opt, test_opt], ['val2014', 'test2014']):
+    loader.ix_to_word = infos['vocab']
+    opt.datset = opt.input_json
     loss, split_predictions, lang_stats = eval_utils.eval_split(model, crit, loader,
         vars(opt))
-    file_path = "captions_"+name+"_clw_results.json", "w"
+    file_path = "captions_"+name+"_clw_results.json"
     print("writing results to {}".format(file_path))
-    json.dump(split_predictions, open("captions_"+name+"_clw_results.json", "w"))
+    json.dump(split_predictions, open(file_path, "w"))
 
