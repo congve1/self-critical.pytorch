@@ -108,6 +108,12 @@ The defualt split to evaluate is test. The default inference method is greedy de
 
 **Live demo**. Not supported now. Welcome pull request.
 
+## Evaluate on Online COCO Server
+
+```bash
+$ python generate_online_results.py --dump_images 0 --model model.pth --infos_path infos.pkl --beam_size beam_size --batch_size batch_size
+```
+
 ## For more advanced features:
 
 Checkout `ADVANCED.md`.
