@@ -14,6 +14,7 @@ from .FCModel import FCModel
 from .OldModel import ShowAttendTellModel, AllImgModel
 from .AttModel import *
 from .TransformerModel import TransformerModel
+from .SelfAttModel import SelfAttModel
 
 def setup(opt):
     if opt.caption_model == 'fc':
@@ -50,6 +51,8 @@ def setup(opt):
     # Transformer
     elif opt.caption_model == 'transformer':
         model = TransformerModel(opt)
+    elif opt.caption_model == 'selfatt':
+        model = SelfAttModel(opt)
     else:
         raise Exception("Caption model not supported: {}".format(opt.caption_model))
 
