@@ -9,7 +9,7 @@ else
   GPU=0
 fi
 
-folder="karparth_test_results"
+folder="karpathy_test_results"
 if [ ! -d $folder ]; then
   echo "folder: ${folder} not exists, creating one."
   mkdir $folder
