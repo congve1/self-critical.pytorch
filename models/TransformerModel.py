@@ -296,7 +296,7 @@ class TransformerModel(AttModel):
         att_feats, seq, att_masks, seq_mask = self._prepare_feature_forward(att_feats, att_masks)
         memory = self.model.encode(att_feats, att_masks)
 
-        return fc_feats[...,:1], att_feats[...,:1], memory, att_masks
+        return fc_feats[...,:0], att_feats[...,:0], memory, att_masks
 
     def _prepare_feature_forward(self, att_feats, att_masks=None, seq=None):
         att_feats, att_masks = self.clip_att(att_feats, att_masks)
@@ -311,10 +311,16 @@ class TransformerModel(AttModel):
             # crop the last one
             seq = seq[:,:-1]
             seq_mask = (seq.data > 0)
-            seq_mask[:,0] += 1
+            seq_mask[:,0] = 1 # bos
 
             seq_mask = seq_mask.unsqueeze(-2)
             seq_mask = seq_mask & subsequent_mask(seq.size(-1)).to(seq_mask)
+
+            seq_per_img = seq.shape[0] // att_feats.shape[0]
+            if seq_per_img > 1:
+                att_feats, att_masks = utils.repeat_tensors(seq_per_img,
+                    [att_feats, att_masks]
+                )
         else:
             seq_mask = None
 

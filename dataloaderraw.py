@@ -81,6 +81,9 @@ class DataLoaderRaw():
 
         self.iterator = 0
 
+        # Nasty
+        self.dataset = self  # to fix the bug in eval
+
     def get_batch(self, split, batch_size=None):
         batch_size = batch_size or self.batch_size
 
@@ -126,6 +129,8 @@ class DataLoaderRaw():
         data['att_masks'] = None
         data['bounds'] = {'it_pos_now': self.iterator, 'it_max': self.N, 'wrapped': wrapped}
         data['infos'] = infos
+
+        data = {k:torch.from_numpy(v) if type(v) is np.ndarray else v for k,v in data.items()} # Turn all ndarray to torch tensor
 
         return data
 
