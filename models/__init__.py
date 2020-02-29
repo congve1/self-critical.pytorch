@@ -11,12 +11,15 @@ import torch
 
 from .ShowTellModel import ShowTellModel
 from .FCModel import FCModel
-from .OldModel import ShowAttendTellModel, AllImgModel
 from .AttModel import *
 from .TransformerModel import TransformerModel
 from .SelfAttModel import SelfAttModel
 
 def setup(opt):
+    if opt.caption_model in ['fc', 'show_tell']:
+        print('Warning: %s model is mostly deprecated; many new features are not supported.' %opt.caption_model)
+        if opt.caption_model == 'fc':
+            print('Use newfc instead of fc')
     if opt.caption_model == 'fc':
         model = FCModel(opt)
     elif opt.caption_model == 'language_model':
@@ -32,6 +35,7 @@ def setup(opt):
     elif opt.caption_model == 'att2in2':
         model = Att2in2Model(opt)
     elif opt.caption_model == 'att2all2':
+        print('Warning: this is not a correct implementation of the att2all model in the original paper.')
         model = Att2all2Model(opt)
     # Adaptive Attention model from Knowing when to look
     elif opt.caption_model == 'adaatt':
@@ -40,8 +44,8 @@ def setup(opt):
     elif opt.caption_model == 'adaattmo':
         model = AdaAttMOModel(opt)
     # Top-down attention model
-    elif opt.caption_model == 'topdown':
-        model = TopDownModel(opt)
+    elif opt.caption_model in ['topdown', 'updown']:
+        model = UpDownModel(opt)
     # StackAtt
     elif opt.caption_model == 'stackatt':
         model = StackAttModel(opt)
@@ -55,12 +59,5 @@ def setup(opt):
         model = SelfAttModel(opt)
     else:
         raise Exception("Caption model not supported: {}".format(opt.caption_model))
-
-    # check compatibility if training is continued from previously saved model
-    if vars(opt).get('start_from', None) is not None:
-        # check if all necessary files exist 
-        assert os.path.isdir(opt.start_from)," %s must be a a path" % opt.start_from
-        assert os.path.isfile(os.path.join(opt.start_from,"infos_"+opt.id+".pkl")),"infos.pkl file does not exist in path %s"%opt.start_from
-        model.load_state_dict(torch.load(os.path.join(opt.start_from, 'model.pth')))
 
     return model

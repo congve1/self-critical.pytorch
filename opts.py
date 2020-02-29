@@ -1,4 +1,5 @@
 import argparse
+import misc.utils as utils
 
 def parse_opt():
     parser = argparse.ArgumentParser()
@@ -25,7 +26,7 @@ def parse_opt():
 
     # Model settings
     parser.add_argument('--caption_model', type=str, default="show_tell",
-                    help='show_tell, show_attend_tell, all_img, fc, att2in, att2in2, att2all2, adaatt, adaattmo, topdown, stackatt, denseatt, transformer')
+                    help='show_tell, show_attend_tell, all_img, fc, att2in, att2in2, att2all2, adaatt, adaattmo, updown, stackatt, denseatt, transformer')
     parser.add_argument('--rnn_size', type=int, default=512,
                     help='size of the rnn in number of hidden nodes in each layer')
     parser.add_argument('--num_layers', type=int, default=1,
@@ -60,8 +61,10 @@ def parse_opt():
                     help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=16,
                     help='minibatch size')
-    parser.add_argument('--grad_clip', type=float, default=0.1, #5.,
-                    help='clip gradients at this value')
+    parser.add_argument('--grad_clip_mode', type=str, default='value', #5.,
+                    help='value or norm')
+    parser.add_argument('--grad_clip_value', type=float, default=0.1, #5.,
+                    help='clip gradients at this value/max_norm')
     parser.add_argument('--drop_prob_lm', type=float, default=0.5,
                     help='strength of dropout in the Language Model RNN')
     parser.add_argument('--self_critical_after', type=int, default=-1,
@@ -127,9 +130,11 @@ def parse_opt():
                     help='how many images to use when periodically evaluating the validation loss? (-1 = all)')
     parser.add_argument('--save_checkpoint_every', type=int, default=2500,
                     help='how often to save a model checkpoint (in iterations)?')
-    parser.add_argument('--save_history_ckpt', type=int, default=1,
+    parser.add_argument('--save_every_epoch', action='store_true',
+                    help='Save checkpoint every epoch, will overwrite save_checkpoint_every')
+    parser.add_argument('--save_history_ckpt', type=int, default=0,
                     help='If save checkpoints at every save point')
-    parser.add_argument('--checkpoint_path', type=str, default='save',
+    parser.add_argument('--checkpoint_path', type=str, default=None,
                     help='directory to store checkpointed models')
     parser.add_argument('--language_eval', type=int, default=0,
                     help='Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
@@ -151,7 +156,51 @@ def parse_opt():
     parser.add_argument('--bleu_reward_weight', type=float, default=0,
                     help='The reward weight from bleu4')
 
+
+    # Structure_loss
+    parser.add_argument('--structure_loss_weight', type=float, default=1,
+                    help='')
+    parser.add_argument('--structure_after', type=int, default=-1,
+                    help='T')
+    parser.add_argument('--structure_loss_type', type=str, default='seqnll',
+                    help='')
+    parser.add_argument('--struc_use_logsoftmax', action='store_true', help='')
+    parser.add_argument('--entropy_reward_weight', type=float, default=0,
+                    help='Entropy reward, seems very interesting')
+    parser.add_argument('--self_cider_reward_weight', type=float, default=0,
+                    help='self cider reward')
+
+    # Used for self critical or structure. Used when sampling is need during training
+    parser.add_argument('--train_sample_n', type=int, default=16,
+                    help='The reward weight from cider')
+    parser.add_argument('--train_sample_method', type=str, default='sample',
+                    help='')
+    parser.add_argument('--train_beam_size', type=int, default=1,
+                    help='')
+
+    # For diversity evaluation during training
+    add_diversity_opts(parser)
+
+
+    # config
+    parser.add_argument('--cfg', type=str, default=None,
+                    help='configuration; similar to what is used in detectron')
+    # How will config be used
+    # 1) read cfg argument, and load the cfg file if it's not None
+    # 2) parse config argument
+    # 3) in the end, parse command line argument
+
+    # step 1: read cfg_fn
     args = parser.parse_args()
+    if args.cfg is not None:
+        from misc.config import CfgNode
+        cn = CfgNode.load_yaml_with_base(args.cfg)
+        for k,v in cn.items():
+            if hasattr(args, k):
+                setattr(args, k, v)
+            else:
+                print('Warning: key %s not in args' %k)
+        args = parser.parse_args(namespace=args)
 
     # Check if args are valid
     assert args.rnn_size > 0, "rnn_size should be greater than 0"
@@ -167,7 +216,16 @@ def parse_opt():
     assert args.load_best_score == 0 or args.load_best_score == 1, "language_eval should be 0 or 1"
     assert args.train_only == 0 or args.train_only == 1, "language_eval should be 0 or 1"
 
+    # default value for start_from and checkpoint_path
+    args.checkpoint_path = args.checkpoint_path or './log_%s' %args.id
+    args.start_from = args.start_from or args.checkpoint_path
+
+    # Deal with feature things before anything
+    args.use_fc, args.use_att = utils.if_use_feat(args.caption_model)
+    if args.use_box: args.att_feat_size = args.att_feat_size + 5
+
     return args
+
 
 def add_eval_options(parser):
     # Basic options
@@ -205,6 +263,8 @@ def add_eval_options(parser):
                     help='block repeated trigram.')
     parser.add_argument('--remove_bad_endings', type=int, default=0,
                     help='Remove bad endings')
+    parser.add_argument('--suppress_UNK', type=int, default=1,
+                    help='Not predicting UNK')
     # For evaluation on a folder of images:
     parser.add_argument('--image_folder', type=str, default='', 
                     help='If this is nonempty then will predict on the images in this folder path')
@@ -232,3 +292,26 @@ def add_eval_options(parser):
                     help='if we need to print out all beam search beams.')
     parser.add_argument('--verbose_loss', type=int, default=0, 
                     help='If calculate loss using ground truth during evaluation')
+
+def add_diversity_opts(parser):
+    parser.add_argument('--sample_n', type=int, default=1,
+                    help='Diverse sampling')
+    parser.add_argument('--sample_n_method', type=str, default='sample',
+                    help='sample, bs, dbs, gumbel, topk, dgreedy, dsample, dtopk, dtopp')
+    parser.add_argument('--eval_oracle', type=int, default=1, 
+                    help='if we need to calculate loss.')
+
+
+if __name__ == '__main__':
+    import sys
+    sys.argv = [sys.argv[0]]
+    args = parse_opt()
+    print(args)
+    print()
+    sys.argv = [sys.argv[0], '--cfg', 'configs/updown_long.yml']
+    args1 = parse_opt()
+    print(dict(set(vars(args1).items()) - set(vars(args).items())))
+    print()
+    sys.argv = [sys.argv[0], '--cfg', 'configs/updown_long.yml', '--caption_model', 'att2in2']
+    args2 = parse_opt()
+    print(dict(set(vars(args2).items()) - set(vars(args1).items())))

@@ -27,6 +27,7 @@ parser.add_argument('--weights', nargs='+', required=False, default=None, help='
 #                 help='path to model to evaluate')
 # parser.add_argument('--infos_paths', nargs='+', required=True, help='path to infos to evaluate')
 opts.add_eval_options(parser)
+opts.add_diversity_opts(parser)
 
 opt = parser.parse_args()
 
@@ -38,7 +39,7 @@ for id in opt.ids:
         app = '-'+app
     else:
         app = ''
-    model_infos.append(utils.pickle_load(open('log_%s/infos_%s%s.pkl' %(id, id, app))))
+    model_infos.append(utils.pickle_load(open('log_%s/infos_%s%s.pkl' %(id, id, app), 'rb')))
     model_paths.append('log_%s/model%s.pth' %(id,app))
 
 # Load one infos

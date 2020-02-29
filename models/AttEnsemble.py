@@ -1,16 +1,4 @@
-# This file contains Att2in2, AdaAtt, AdaAttMO, TopDown model
-
-# AdaAtt is from Knowing When to Look: Adaptive Attention via A Visual Sentinel for Image Captioning
-# https://arxiv.org/abs/1612.01887
-# AdaAttMO is a modified version with maxout lstm
-
-# Att2in is from Self-critical Sequence Training for Image Captioning
-# https://arxiv.org/abs/1612.00563
-# In this file we only have Att2in2, which is a slightly different version of att2in,
-# in which the img feature embedding and word embedding is the same as what in adaatt.
-
-# TopDown is from Bottom-Up and Top-Down Attention for Image Captioning and VQA
-# https://arxiv.org/abs/1707.07998
+# This file is the implementation for ensemble evaluation.
 
 from __future__ import absolute_import
 from __future__ import division
@@ -60,7 +48,7 @@ class AttEnsemble(AttModel):
     def core(self, *args):
         return zip(*[m.core(*_) for m, _ in zip(self.models, zip(*args))])
 
-    def get_logprobs_state(self, it, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, tmp_att_masks, state):
+    def get_logprobs_state(self, it, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, tmp_att_masks, state, output_logsoftmax=1):
         # 'it' contains a word index
         xt = self.embed(it)
 
@@ -73,20 +61,7 @@ class AttEnsemble(AttModel):
     def _prepare_feature(self, *args):
         return tuple(zip(*[m._prepare_feature(*args) for m in self.models]))
 
-    # def _prepare_feature(self, fc_feats, att_feats, att_masks):
-
-    #     att_feats, att_masks = self.clip_att(att_feats, att_masks)
-
-    #     # embed fc and att feats
-    #     fc_feats = [m.fc_embed(fc_feats) for m in self.models]
-    #     att_feats = [pack_wrapper(m.att_embed, att_feats[...,:m.att_feat_size], att_masks) for m in self.models]
-
-    #     # Project the attention feats first to reduce memory and computation comsumptions.
-    #     p_att_feats = [m.ctx2att(att_feats[i]) for i,m in enumerate(self.models)]
-
-    #     return fc_feats, att_feats, p_att_feats, [att_masks] * len(self.models)
-
-    def _sample_beam(self, fc_feats, att_feats, att_masks=None, opt={}):
+    def _old_sample_beam(self, fc_feats, att_feats, att_masks=None, opt={}):
         beam_size = opt.get('beam_size', 10)
         batch_size = fc_feats.size(0)
 
@@ -94,7 +69,7 @@ class AttEnsemble(AttModel):
 
         assert beam_size <= self.vocab_size + 1, 'lets assume this for now, otherwise this corner case causes a few headaches down the road. can be dealt with in future if needed'
         seq = torch.LongTensor(self.seq_length, batch_size).zero_()
-        seqLogprobs = torch.FloatTensor(self.seq_length, batch_size)
+        seqLogprobs = torch.FloatTensor(self.seq_length, batch_size, self.vocab_size + 1)
         # lets process every image independently for now, for simplicity
 
         self.done_beams = [[] for _ in range(batch_size)]
@@ -108,7 +83,7 @@ class AttEnsemble(AttModel):
             it = fc_feats[0].data.new(beam_size).long().zero_()
             logprobs, state = self.get_logprobs_state(it, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, tmp_att_masks, state)
 
-            self.done_beams[k] = self.beam_search(state, logprobs, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, tmp_att_masks, opt=opt)
+            self.done_beams[k] = self.old_beam_search(state, logprobs, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, tmp_att_masks, opt=opt)
             seq[:, k] = self.done_beams[k][0]['seq'] # the first beam has highest cumulative score
             seqLogprobs[:, k] = self.done_beams[k][0]['logps']
         # return the samples and their log likelihoods

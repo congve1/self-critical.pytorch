@@ -1,5 +1,7 @@
 # Prepare data
 
+Note: every preprocessed file or preextracted features can be found in [link](https://drive.google.com/open?id=1eCdz62FAVCGogOuNhy87Nmlo5_I0sH2J).
+
 ## COCO
 
 ### Download COCO captions and preprocess them
@@ -31,14 +33,20 @@ $ python scripts/prepro_feats.py --input_json data/dataset_coco.json --output_di
 
 **Warning**: the prepro script will fail with the default MSCOCO data because one of their images is corrupted. See [this issue](https://github.com/karpathy/neuraltalk2/issues/4) for the fix, it involves manually replacing one image in the dataset.
 
+
+#### Download preextracted features
+
+To skip the preprocessing, you can download and decompress `cocotalk_att.tar` and `cocotalk_fc.tar` from the link provided at the beginning.)
+
 ### Download Bottom-up features (Skip if you are using resnet features)
 
-Download pre-extracted feature from [link](https://github.com/peteanderson80/bottom-up-attention). You can either download adaptive one or fixed one.
+#### Convert from peteanderson80's original file
+Download pre-extracted features from [link](https://github.com/peteanderson80/bottom-up-attention). You can either download adaptive one or fixed one.
 
 For example:
 ```
 mkdir data/bu_data; cd data/bu_data
-wget https://storage.googleapis.com/bottom-up-attention/trainval.zip
+wget https://imagecaption.blob.core.windows.net/imagecaption/trainval.zip
 unzip trainval.zip
 
 ```
@@ -49,7 +57,11 @@ Then:
 python script/make_bu_data.py --output_dir data/cocobu
 ```
 
-This will create `data/cocobu_fc`, `data/cocobu_att` and `data/cocobu_box`. If you want to use bottom-up feature, you can just follow the following steps and replace all cocotalk with cocobu.
+This will create `data/cocobu_fc`(not necessary), `data/cocobu_att` and `data/cocobu_box`. If you want to use bottom-up feature, you can just replace all `"cocotalk"` with `"cocobu"` in the training/test scripts.
+
+#### Download converted files
+
+bottomup-att: [link](https://drive.google.com/file/d/1hun0tsel34aXO4CYyTRIvHJkcbZHwjrD/view?usp=sharing)
 
 ## Flickr30k.
 
