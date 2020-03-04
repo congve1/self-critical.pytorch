@@ -125,7 +125,7 @@ print('loss: ', loss)
 model_id = infos['opt'].id
 xe = "_xe"
 if "rl" in model_id:
-  xe = "rl"
+  xe = ""
 model_name = model_id+xe+"_model_"+str(infos['iter'])
 print(model_name)
 print("beam_size "+str(opt.beam_size))

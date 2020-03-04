@@ -4,7 +4,7 @@ from typing import Dict
 
 
 def dump_results_to_json(model_name: str, beam_size: int, lang_stats: Dict[str, float], out_path: str) -> None:
-    file_name = os.path.join(out_path, model_name+str(beam_size)+".json")
+    file_name = os.path.join(out_path, model_name + '_' +str(beam_size)+".json")
     out_json = {
         "model_name": model_name,
         "beam_size": beam_size,
