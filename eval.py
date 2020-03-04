@@ -18,6 +18,8 @@ import argparse
 import misc.utils as utils
 import torch
 
+from misc.dump_results import dump_results_to_json
+
 # Input arguments and options
 parser = argparse.ArgumentParser()
 # Input paths
@@ -31,9 +33,15 @@ parser.add_argument('--only_lang_eval', type=int, default=0,
                 help='lang eval on saved results')
 parser.add_argument('--force', type=int, default=0,
                 help='force to evaluate no matter if there are results available')
+parser.add_argument('--output_path', type=str, default='karpathy_test_results',
+                    help='output path for dump results json')
 opts.add_eval_options(parser)
 opts.add_diversity_opts(parser)
 opt = parser.parse_args()
+
+#check output path
+if not os.path.exists(opt.output_path):
+    os.makedirs(opt.output_path)
 
 # Load infos
 with open(opt.infos_path, 'rb') as f:
@@ -117,12 +125,14 @@ print('loss: ', loss)
 model_id = infos['opt'].id
 xe = "_xe"
 if "rl" in model_id:
-  xe = ""
-print(model_id+xe+"_model_"+str(infos['iter']))
+  xe = "rl"
+model_name = model_id+xe+"_model_"+str(infos['iter'])
+print(model_name)
 print("beam_size "+str(opt.beam_size))
 if lang_stats:
+    dump_results_to_json(model_name, opt.beam_size, lang_stats, opt.output_path)
     print(lang_stats)
 
 if opt.dump_json == 1:
     # dump the json
-    json.dump(split_predictions, open('vis/vis.json', 'w'))
+    json.dump(split_predictions, open('vis/vis'+model_name+str(opt.beam_size)+'.json', 'w'))
