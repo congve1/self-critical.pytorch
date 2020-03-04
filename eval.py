@@ -60,8 +60,8 @@ for k in vars(infos['opt']).keys():
 
 vocab = infos['vocab'] # ix -> word mapping
 
-pred_fn = os.path.join('eval_results/', '.saved_pred_'+ opt.id + '_' + opt.split + '_' + str(opt.beam_size) + '.pth')
-result_fn = os.path.join('eval_results/', opt.id + '_' + opt.split + '_' + str(opt.beam_size) + '.json')
+pred_fn = os.path.join('eval_results/', '.saved_pred_'+ opt.id + '_' + str(infos['iter']) + '_' + str(opt.beam_size) + '_' + opt.split + '.pth')
+result_fn = os.path.join('eval_results/', opt.id + '_' + str(infos['iter']) + '_' + str(opt.beam_size) + '_' + opt.split + '_' + str(opt.beam_size) + '.json')
 
 if opt.only_lang_eval == 1 or (not opt.force and os.path.isfile(pred_fn)): 
     # if results existed, then skip, unless force is on
