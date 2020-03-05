@@ -68,6 +68,8 @@ val_opt.input_json = "data/captions_val2014.json"
 val_opt.input_label_h5 = 'none'
 val_opt.split = "val"
 val_dataloader = DataLoader(val_opt)
+val_dataloader.dataset.ix_to_word = vocab
+val_dataloader.dataset.vocab_size = len(vocab)
 
 test_opt = copy.deepcopy(opt)
 test_opt.input_fc_dir = "data/cocobu_fc"
@@ -77,6 +79,8 @@ test_opt.input_label_h5 = 'none'
 test_opt.split = "test"
 
 test_dataloader = DataLoader(test_opt)
+test_dataloader.dataset.ix_to_word = vocab
+test_dataloader.dataset.ix_to_word = len(vocab)
 # When eval using provided pretrained model, the vocab may be different from what you have in your cocotalk.json
 # So make sure to use the vocab in infos file.
 
