@@ -35,7 +35,7 @@ opts.add_eval_options(parser)
 opt = parser.parse_args()
 
 # Load infos
-with open(opt.infos_path) as f:
+with open(opt.infos_path, 'rb') as f:
     infos = utils.pickle_load(f)
 
 # override and collect parameters
@@ -82,7 +82,7 @@ test_dataloader = DataLoader(test_opt)
 
 
 # Set sample options
-for loader, opt, name in zip([val_dataloader, test_dataloader], [val_opt, test_opt], [opt.agl_name, opt.alg_name]):
+for loader, opt, name in zip([val_dataloader, test_dataloader], [val_opt, test_opt], [opt.alg_name, opt.alg_name]):
     loader.ix_to_word = infos['vocab']
     opt.datset = opt.input_json
     loss, split_predictions, lang_stats = eval_utils.eval_split(model, crit, loader,
