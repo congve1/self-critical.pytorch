@@ -26,6 +26,8 @@ parser.add_argument('--model', type=str, default='',
                 help='path to model to evaluate')
 parser.add_argument('--cnn_model', type=str,  default='resnet101',
                 help='resnet101, resnet152')
+parser.add_argument('--alg_name', type=str, default='clw',
+                    help='alg_name')
 parser.add_argument('--infos_path', type=str, default='',
                 help='path to infos to evaluate')
 opts.add_eval_options(parser)
@@ -80,7 +82,7 @@ test_dataloader = DataLoader(test_opt)
 
 
 # Set sample options
-for loader, opt, name in zip([val_dataloader, test_dataloader], [val_opt, test_opt], ['val2014', 'test2014']):
+for loader, opt, name in zip([val_dataloader, test_dataloader], [val_opt, test_opt], [opt.agl_name, opt.alg_name]):
     loader.ix_to_word = infos['vocab']
     opt.datset = opt.input_json
     loss, split_predictions, lang_stats = eval_utils.eval_split(model, crit, loader,

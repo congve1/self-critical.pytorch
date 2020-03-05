@@ -36,5 +36,5 @@ fi
 echo "CUDA_VISIBLE_DEVICES=$GPU"
 
 export CUDA_VISIBLE_DEVICES=$GPU
-python generate_online_results.py --dump_images 0 --model $model_path --infos_path $infos_path --beam_size $beam_size --batch_size 1000
+python generate_online_results.py --dump_images 0 --alg_name ${id}${iter} --model $model_path --infos_path $infos_path --beam_size $beam_size --batch_size 1000
 unset CUDA_VISIBLE_DEVICES
