@@ -80,7 +80,7 @@ test_opt.split = "test"
 
 test_dataloader = DataLoader(test_opt)
 test_dataloader.dataset.ix_to_word = vocab
-test_dataloader.dataset.ix_to_word = len(vocab)
+test_dataloader.dataset.vocab_size = len(vocab)
 # When eval using provided pretrained model, the vocab may be different from what you have in your cocotalk.json
 # So make sure to use the vocab in infos file.
 
