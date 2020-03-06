@@ -91,7 +91,7 @@ for loader, opt, name in zip([val_dataloader, test_dataloader], [val_opt, test_o
     opt.datset = opt.input_json
     loss, split_predictions, lang_stats = eval_utils.eval_split(model, crit, loader,
         vars(opt))
-    file_path = "captions_"+name+'_'+opt.split+"_clw_results.json"
+    file_path = "captions_"+opt.split+"2014_"+opt.alg_name+"_"+"_clw_results.json"
     print("writing results to {}".format(file_path))
     json.dump(split_predictions, open(file_path, "w"))
 
